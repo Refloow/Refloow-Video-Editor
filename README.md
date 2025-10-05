@@ -8,9 +8,9 @@ Fully free! Privacy-first, fully offline desktop video editor built for creators
 > > [Click here to join our discord server!](discord.gg/4enDY8yhuS) <br>
 > > Feel free to ask any questions, get support and report bugs
 
-<p align="center">
-<img width="223.5" height="263" alt="image" src="https://github.com/user-attachments/assets/195983df-5aa4-4b7e-88f9-38db9709bf4a" />
-</p>
+
+
+<img width="768" height="512" alt="image" src="https://github.com/user-attachments/assets/a26cf49e-d01b-4365-9e9c-bd382ca5857c" />
 
 General ui showcase
 <img width="2540" height="1328" alt="image" src="https://github.com/user-attachments/assets/6af5f607-968c-43f1-8c74-ee9b29758b65" />
