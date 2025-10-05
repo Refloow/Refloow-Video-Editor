@@ -19,16 +19,15 @@ General ui showcase
 Editing showcase
 <img width="1806" height="1254" alt="showcase1" src="https://github.com/user-attachments/assets/31b3f75c-dc20-4def-9982-e3619e1e67eb" />
 
-## Usage Guide
+## 🧭 Quick Start Guide
+- **Download** the installer from the Releases page.
+- **Install** the app and launch it.
+- **Import media** you want to edit.
+- **Drag media** to the video track.
+- **Trim** by shrinking the clip from either end.
+- **Cut** and delete segments with right-click → Delete.
+- **Preview** using the red playhead and playback button.
+- **Add multiple tracks** with the third toolbar button.
+- **Move clips** with left-click and drag.
+- **Zoom in** for precision editing on tracks using Ctrl + scroll wheel.
 
-1. Download
-2. Install using the installer
-3. Open the app
-4. Import your media you wish to edit
-5. Drag the media to the video track
-6. You can shorten the video from both ends by shrinking it
-7. You can cut the video into pieces and delete certain parts with right click and delete
-8. You can slide the red line that plays the video to a precise point to look at the preview (button next to the cut option plays the video)
-9. You can create multiple tracks with the 3rd button
-10. Media can be moved around with left click and drag
-11. You can also zoom into the tracks for more precise cutting by using ctrl and scroll wheel
