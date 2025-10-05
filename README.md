@@ -20,7 +20,7 @@ Editing showcase
 <img width="1806" height="1254" alt="showcase1" src="https://github.com/user-attachments/assets/31b3f75c-dc20-4def-9982-e3619e1e67eb" />
 
 ## 🧭 Quick Start Guide
-- **Download** the installer from the Releases page.
+- **Download** the installer from the [Releases](https://github.com/Refloow/Refloow-Video-Editor/releases) page.
 - **Install** the app and launch it.
 - **Import media** you want to edit.
 - **Drag media** to the video track.
