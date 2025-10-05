@@ -1,8 +1,12 @@
-# Refloow-Video-Editor
+# Refloow-Video-Editor (Desktop App)
 
-❤️ Fully free and open source video editor, dark mode, intuitive interface, cutting stitching and rendering of the videos and audio all in one place
+Fully free! No watermark video editor built for desktop use with dark mode, intuitive interface, cutting, merging and rendering of the videos built with transparency!
+No server processing, no data collection, you own your videos and we make it possible to edit them ❤️ 
 
+⭐ Leave a star (its free) on github to support my work if you want more free and amazing features built into the editor
+
+<p align="center">
 <img width="223.5" height="263" alt="image" src="https://github.com/user-attachments/assets/195983df-5aa4-4b7e-88f9-38db9709bf4a" />
-
+</p>
 <img width="2540" height="1328" alt="image" src="https://github.com/user-attachments/assets/6af5f607-968c-43f1-8c74-ee9b29758b65" />
 <img width="1806" height="1254" alt="showcase1" src="https://github.com/user-attachments/assets/31b3f75c-dc20-4def-9982-e3619e1e67eb" />
