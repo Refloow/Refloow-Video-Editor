@@ -1,7 +1,6 @@
 # Refloow-Video-Editor (Desktop App)
 
-Fully free! No watermark video editor built for desktop use with dark mode, intuitive interface, cutting, merging and rendering built with transparency!
-No server processing, no data collection, you own your videos and we make it possible to edit them ❤️ 
+Fully free! Privacy-first, fully offline desktop video editor built for creators who value control. No watermarks, no server-side processing, and no hidden tracking just fast, intuitive editing with multi-track support, real-time preview, and essential tools. Whether you're trimming clips or building full timelines, you can edit without compromise. ❤️ 
 
 ⭐ Leave a star (its free) on github to support my work if you want more free and amazing features built into the editor
 
