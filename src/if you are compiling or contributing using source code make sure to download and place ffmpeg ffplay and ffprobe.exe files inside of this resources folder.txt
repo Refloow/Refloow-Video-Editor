@@ -1,1 +1,0 @@
-if you are compiling or contributing using source code make sure to download and place ffmpeg ffplay and ffprobe.exe files inside of this resources folder
