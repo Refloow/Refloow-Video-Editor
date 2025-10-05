@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Refloow-Video-Editor</title>
+    <script src="./resources/tailwindcss.js"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        overscroll-behavior: none;
+        user-select: none;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #111;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #444, #222);
+        border-radius: 4px;
+        border: 1px solid #000;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #666, #333);
+      }
+
+      .timeline-clip {
+        position: absolute;
+        height: 60px;
+        background-color: #4a90e2;
+        border-radius: 8px;
+        border: 2px solid #357abd;
+        cursor: grab;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        padding: 0 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .timeline-clip:active {
+        cursor: grabbing;
+        z-index: 100;
+      }
+      .resize-handle {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 8px;
+        cursor: ew-resize;
+        z-index: 110;
+      }
+      .resize-handle.left {
+        left: 0;
+      }
+      .resize-handle.right {
+        right: 0;
+      }
+      #playhead {
+        position: absolute;
+        width: 2px;
+        height: 100%;
+        background-color: red;
+        top: 0;
+        left: 0;
+        z-index: 50;
+        cursor: ew-resize;
+      }
+      .tooltip {
+        position: fixed;
+        display: none;
+        background: #333;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        pointer-events: none;
+      }
+      #context-menu {
+        position: fixed;
+        display: none;
+        background-color: #2d3748;
+        border: 1px solid #4a5568;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        z-index: 2000;
+        min-width: 150px;
+      }
+      #context-menu button {
+        display: block;
+        width: 100%;
+        padding: 10px 15px;
+        text-align: left;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+      }
+      #context-menu button:hover {
+        background-color: #4a5568;
+      }
+      /* New styles for progress bar */
+      #progress-container {
+        width: 100%;
+        background-color: #4a5568;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      #progress-bar {
+        width: 0%;
+        height: 20px;
+        background-color: #38a169;
+        text-align: center;
+        line-height: 20px;
+        color: white;
+        transition: width 0.2s ease-in-out;
+      }
+    </style>
+    <link rel="stylesheet" href="./resources/rsmsinter.css" />
+  </head>
+
+  <body class="bg-gray-800 text-white flex flex-col h-screen overflow-hidden">
+    <!-- Top Bar -->
+    <header class="bg-gray-900 p-2 flex items-center justify-between shadow-md z-10">
+      <h1 class="text-xl font-bold">Refloow Video Editor</h1>
+      <div class="flex items-center space-x-2">
+        <button id="importBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+          Import Media
+        </button>
+        <button id="renderBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+          Render Video
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex p-4 space-x-4 overflow-hidden">
+      <!-- Left Panel (Video Preview and Media Pool) -->
+      <div class="w-1/3 flex flex-col space-y-4">
+        <div class="flex-grow bg-black rounded-lg flex items-center justify-center relative">
+          <video id="videoPlayer" class="max-w-full max-h-full"></video>
+          <div id="player-status" class="absolute text-gray-400">No media loaded</div>
+        </div>
+        <div class="h-1/3 bg-gray-900 rounded-lg p-3 overflow-y-auto">
+          <h2 class="text-lg font-semibold mb-2">Media Pool</h2>
+          <div id="mediaPool" class="space-y-2">
+            <p class="text-gray-500">Imported files will show up here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel (Timeline) -->
+      <div class="w-2/3 flex flex-col bg-gray-900 rounded-lg p-3 overflow-hidden">
+        <div class="flex items-center mb-2 space-x-4">
+          <h2 class="text-lg font-semibold">Timeline</h2>
+          <div id="playback-controls" class="flex items-center space-x-2 bg-gray-800 p-1 rounded-lg">
+            <button id="play-pause-btn" class="p-2 rounded-lg bg-gray-700 hover:bg-blue-600" title="Play/Pause">
+              <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </button>
+          </div>
+          <button id="scissorsTool" class="p-2 rounded-lg bg-gray-700 hover:bg-red-600 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors" title="Scissors Tool">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.412 9.588a2 2 0 11-2.828 2.828M11.586 12.414L6 18m0-6l5.586-5.586M9 6a2 2 0 100-4 2 2 0 000 4zm11 11a2 2 0 100-4 2 2 0 000 4z" /></svg>
+          </button>
+          <button id="add-video-track-btn" class="p-2 rounded-lg bg-gray-700 hover:bg-blue-600" title="Add Video Track">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+          </button>
+        </div>
+        <div id="timelineContainer" class="flex-grow bg-gray-800 rounded-lg overflow-x-auto relative p-4">
+          <div id="playhead"></div>
+          <div id="tracks-container">
+            <div id="videoTrack_1" class="track video-track relative h-20 bg-gray-700/50 rounded-lg mb-2">
+              <div class="p-2 text-xs font-bold text-gray-400">Video Track 1</div>
+            </div>
+            <div id="audioTrack" class="track audio-track relative h-20 bg-gray-700/50 rounded-lg">
+              <div class="p-2 text-xs font-bold text-gray-400">Audio Track</div>
+            </div>
+          </div>
+          <div class="tooltip" id="timelineTooltip"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+      <button id="delete-clip-btn">Delete Clip</button>
+    </div>
+
+    <!-- Status Bar / Message Modal -->
+    <div id="statusModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div id="status-content" class="bg-gray-700 p-6 rounded-lg shadow-xl min-w-[300px]">
+        <p id="statusMessage"></p>
+        <div id="progress-container" class="hidden">
+          <div id="progress-bar">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const importBtn = document.getElementById("importBtn");
+        const renderBtn = document.getElementById("renderBtn");
+        const mediaPool = document.getElementById("mediaPool");
+        const tracksContainer = document.getElementById("tracks-container");
+        const audioTrack = document.getElementById("audioTrack");
+        const videoPlayer = document.getElementById("videoPlayer");
+        const playerStatus = document.getElementById("player-status");
+        const scissorsTool = document.getElementById("scissorsTool");
+        const timelineContainer = document.getElementById("timelineContainer");
+        const playhead = document.getElementById("playhead");
+        const timelineTooltip = document.getElementById("timelineTooltip");
+        const playPauseBtn = document.getElementById("play-pause-btn");
+        const playIcon = document.getElementById("play-icon");
+        const pauseIcon = document.getElementById("pause-icon");
+        const addVideoTrackBtn = document.getElementById("add-video-track-btn");
+        const contextMenu = document.getElementById("context-menu");
+        const deleteClipBtn = document.getElementById("delete-clip-btn");
+
+        let mediaFiles = [];
+        let editDecisionList = {video: [], audio: []};
+        let isScissorsActive = false;
+        let pixelsPerSecond = 50;
+        let activeClip = null;
+        let isScrubbing = false;
+        let videoTrackCount = 1;
+        let contextClipTarget = null;
+
+        let playbackInterval = null;
+        let currentTimelineTime = 0;
+        let lastFrameTime = 0;
+        let isPlaying = false;
+
+        // --- Status Modal Elements ---
+        const statusModal = document.getElementById("statusModal");
+        const statusMessage = document.getElementById("statusMessage");
+        const progressContainer = document.getElementById("progress-container");
+        const progressBar = document.getElementById("progress-bar");
+        let statusTimeout = null;
+
+        function showStatus(message, duration = 3000) {
+          clearTimeout(statusTimeout);
+          statusMessage.textContent = message;
+          statusModal.classList.remove("hidden");
+
+          if (duration > 0) {
+            progressContainer.classList.add("hidden");
+            statusTimeout = setTimeout(() => {
+              statusModal.classList.add("hidden");
+            }, duration);
+          } else {
+            // For persistent messages like rendering, hide previous progress
+            progressContainer.classList.add("hidden");
+          }
+        }
+
+        function showRenderProgress(message) {
+          clearTimeout(statusTimeout);
+          statusMessage.textContent = message;
+          progressContainer.classList.remove("hidden");
+          progressBar.style.width = "0%";
+          progressBar.textContent = "0%";
+          statusModal.classList.remove("hidden");
+        }
+
+        // --- Tooltip Logic ---
+        timelineContainer.addEventListener("mousemove", (e) => {
+          const rect = timelineContainer.getBoundingClientRect();
+          const x = e.clientX - rect.left + timelineContainer.scrollLeft;
+          const timeInSeconds = x / pixelsPerSecond;
+          const minutes = Math.floor(timeInSeconds / 60);
+          const seconds = (timeInSeconds % 60).toFixed(2);
+
+          timelineTooltip.style.display = "block";
+          timelineTooltip.style.left = `${e.clientX + 15}px`;
+          timelineTooltip.style.top = `${e.clientY - 30}px`;
+          timelineTooltip.textContent = `${minutes}:${seconds.padStart(5, "0")}`;
+        });
+        timelineContainer.addEventListener("mouseleave", () => {
+          timelineTooltip.style.display = "none";
+        });
+
+        // --- Playback Engine ---
+        function togglePlayback() {
+          if (editDecisionList.video.length === 0) {
+            showStatus("Add a clip to the timeline to play.", 1500);
+            return;
+          }
+
+          const totalDuration = Math.max(0, ...editDecisionList.video.map((c) => c.timelineStart + c.duration));
+          if (!isPlaying && currentTimelineTime >= totalDuration && totalDuration > 0) {
+            currentTimelineTime = 0;
+          }
+
+          isPlaying = !isPlaying;
+          if (isPlaying) {
+            lastFrameTime = performance.now();
+            requestAnimationFrame(playbackLoop);
+            playIcon.classList.add("hidden");
+            pauseIcon.classList.remove("hidden");
+          } else {
+            cancelAnimationFrame(playbackInterval);
+            videoPlayer.pause();
+            playIcon.classList.remove("hidden");
+            pauseIcon.classList.add("hidden");
+          }
+        }
+        playPauseBtn.addEventListener("click", togglePlayback);
+
+        function playbackLoop(timestamp) {
+          if (!isPlaying) return;
+
+          const totalDuration = Math.max(0, ...editDecisionList.video.map((c) => c.timelineStart + c.duration));
+          const deltaTime = (timestamp - lastFrameTime) / 1000;
+          lastFrameTime = timestamp;
+          currentTimelineTime += deltaTime;
+
+          if (currentTimelineTime >= totalDuration) {
+            currentTimelineTime = totalDuration;
+            playhead.style.left = `${currentTimelineTime * pixelsPerSecond}px`;
+            togglePlayback();
+            return;
+          }
+
+          const clipToPlay = findClipAtTime(currentTimelineTime);
+
+          if (clipToPlay) {
+            const timeWithinClip = currentTimelineTime - clipToPlay.timelineStart;
+            const videoTime = clipToPlay.startOffset + timeWithinClip;
+
+            if (!activeClip || activeClip.id !== clipToPlay.id) {
+              activeClip = clipToPlay;
+              videoPlayer.src = activeClip.filePath;
+              videoPlayer.onloadedmetadata = () => {
+                videoPlayer.currentTime = videoTime;
+                videoPlayer.play().catch((e) => console.error("Playback error:", e));
+              };
+            } else {
+              if (Math.abs(videoPlayer.currentTime - videoTime) > 0.2) {
+                videoPlayer.currentTime = videoTime;
+              }
+              if (videoPlayer.paused) {
+                videoPlayer.play().catch((e) => console.error("Playback error:", e));
+              }
+            }
+          } else {
+            activeClip = null;
+            videoPlayer.pause();
+          }
+
+          playhead.style.left = `${currentTimelineTime * pixelsPerSecond}px`;
+          if (isPlaying) {
+            requestAnimationFrame(playbackLoop);
+          }
+        }
+
+        // --- Timeline Zoom ---
+        timelineContainer.addEventListener(
+          "wheel",
+          (e) => {
+            if (e.ctrlKey) {
+              e.preventDefault();
+              const zoomIntensity = 0.1;
+              const direction = e.deltaY < 0 ? 1 : -1;
+              const zoomFactor = 1 + direction * zoomIntensity;
+              pixelsPerSecond = Math.max(10, Math.min(500, pixelsPerSecond * zoomFactor));
+              updateTimelineZoom();
+            }
+          },
+          {passive: false}
+        );
+
+        function updateTimelineZoom() {
+          document.querySelectorAll(".timeline-clip").forEach((clipEl) => {
+            const clipData = findClipInEDL(clipEl.dataset.clipId);
+            if (clipData) {
+              clipEl.style.left = `${clipData.timelineStart * pixelsPerSecond}px`;
+              clipEl.style.width = `${clipData.duration * pixelsPerSecond}px`;
+            }
+          });
+          playhead.style.left = `${currentTimelineTime * pixelsPerSecond}px`;
+        }
+
+        // --- Timeline Scrubbing ---
+        function scrubToPosition(e) {
+          const rect = timelineContainer.getBoundingClientRect();
+          let x = e.clientX - rect.left;
+          x = Math.max(0, Math.min(x, rect.width));
+          const playheadPos = x + timelineContainer.scrollLeft;
+
+          currentTimelineTime = playheadPos / pixelsPerSecond;
+          playhead.style.left = `${playheadPos}px`;
+
+          const targetClip = findClipAtTime(currentTimelineTime);
+          if (targetClip) {
+            activeClip = targetClip;
+            const timeInClip = currentTimelineTime - targetClip.timelineStart;
+            const newVideoTime = targetClip.startOffset + timeInClip;
+
+            const seek = () => {
+              videoPlayer.currentTime = newVideoTime;
+              videoPlayer.pause();
+            };
+
+            if (!videoPlayer.src || !videoPlayer.src.includes(encodeURI(targetClip.name))) {
+              videoPlayer.src = targetClip.filePath;
+              videoPlayer.onloadedmetadata = seek;
+            } else {
+              seek();
+            }
+          } else {
+            activeClip = null;
+            videoPlayer.pause();
+            videoPlayer.src = "";
+          }
+        }
+
+        timelineContainer.addEventListener("mousedown", (e) => {
+          if (e.button !== 0) return;
+
+          if (e.target.id === "timelineContainer" || e.target.closest(".track")) {
+            if (isPlaying) {
+              togglePlayback();
+            } else {
+              videoPlayer.pause();
+            }
+            isScrubbing = true;
+            scrubToPosition(e);
+          }
+        });
+        window.addEventListener("mousemove", (e) => {
+          if (isScrubbing) {
+            scrubToPosition(e);
+          }
+        });
+        window.addEventListener("mouseup", () => {
+          isScrubbing = false;
+        });
+
+        // --- Tool Activation & Track Management ---
+        scissorsTool.addEventListener("click", () => {
+          isScissorsActive = !isScissorsActive;
+          scissorsTool.classList.toggle("bg-red-600");
+          scissorsTool.classList.toggle("bg-gray-700");
+          document.body.style.cursor = isScissorsActive ? "crosshair" : "default";
+          showStatus(isScissorsActive ? "Scissors tool activated" : "Scissors tool deactivated");
+        });
+        addVideoTrackBtn.addEventListener("click", () => {
+          videoTrackCount++;
+          const newTrack = document.createElement("div");
+          newTrack.id = `videoTrack_${videoTrackCount}`;
+          newTrack.className = "track video-track relative h-20 bg-gray-700/50 rounded-lg mb-2";
+          newTrack.innerHTML = `<div class="p-2 text-xs font-bold text-gray-400">Video Track ${videoTrackCount}</div>`;
+          tracksContainer.insertBefore(newTrack, audioTrack);
+        });
+
+        // --- Media Import ---
+        importBtn.addEventListener("click", async () => {
+          const filePaths = await window.electronAPI.openFile();
+          if (filePaths.length > 0 && mediaPool.querySelector(".text-gray-500")) {
+            mediaPool.innerHTML = "";
+          }
+          filePaths.forEach((filePath) => {
+            const file = {id: `media_${Date.now()}_${Math.random()}`, path: filePath, name: filePath.split(/[\\/]/).pop()};
+            mediaFiles.push(file);
+            const mediaElement = document.createElement("div");
+            mediaElement.className = "bg-gray-700 p-2 rounded-lg cursor-pointer hover:bg-gray-600";
+            mediaElement.textContent = file.name;
+            mediaElement.draggable = true;
+            mediaElement.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", file.id));
+            mediaPool.appendChild(mediaElement);
+          });
+        });
+
+        // --- Timeline Drag and Drop ---
+        tracksContainer.addEventListener("dragover", (e) => e.preventDefault());
+        tracksContainer.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const targetTrack = e.target.closest(".track");
+          if (!targetTrack) return;
+          const mediaId = e.dataTransfer.getData("text/plain");
+          const mediaFile = mediaFiles.find((f) => f.id === mediaId);
+          if (mediaFile) addClipToTimeline(mediaFile, targetTrack, e);
+        });
+
+        // --- Clip Creation & Logic ---
+        function findClipInEDL(clipId) {
+          return editDecisionList.video.find((c) => c.id === clipId) || editDecisionList.audio.find((c) => c.id === clipId);
+        }
+        function findClipAtTime(time) {
+          const sortedClips = editDecisionList.video.sort((a, b) => a.timelineStart - b.timelineStart);
+          const clipsAtTime = sortedClips.filter((c) => time >= c.timelineStart && time < c.timelineStart + c.duration);
+          if (clipsAtTime.length === 0) return null;
+          return clipsAtTime[clipsAtTime.length - 1];
+        }
+
+        function addClipToTimeline(mediaFile, track, dropEvent) {
+          const tempVideo = document.createElement("video");
+          tempVideo.src = mediaFile.path;
+          tempVideo.preload = "metadata";
+          tempVideo.onloadedmetadata = () => {
+            const originalDuration = tempVideo.duration;
+            const trackRect = track.getBoundingClientRect();
+            const dropX = dropEvent.clientX - trackRect.left + track.parentElement.parentElement.scrollLeft;
+
+            const clip = {
+              id: `clip_${Date.now()}_${Math.random()}`,
+              mediaId: mediaFile.id,
+              filePath: mediaFile.path,
+              name: mediaFile.name,
+              track: track.id,
+              startOffset: 0,
+              duration: originalDuration,
+              originalDuration: originalDuration,
+              timelineStart: dropX / pixelsPerSecond,
+            };
+
+            const clipElement = createClipElement(clip, mediaFile.name);
+            clipElement.style.left = `${clip.timelineStart * pixelsPerSecond}px`;
+            track.appendChild(clipElement);
+
+            if (track.classList.contains("video-track")) editDecisionList.video.push(clip);
+            else editDecisionList.audio.push(clip);
+
+            if (!activeClip) {
+              playerStatus.classList.add("hidden");
+            }
+          };
+        }
+
+        function createClipElement(clipData, name) {
+          const clipElement = document.createElement("div");
+          clipElement.className = "timeline-clip";
+          clipElement.style.width = `${clipData.duration * pixelsPerSecond}px`;
+          clipElement.textContent = name;
+          clipElement.dataset.clipId = clipData.id;
+
+          const leftHandle = document.createElement("div");
+          leftHandle.className = "resize-handle left";
+          const rightHandle = document.createElement("div");
+          rightHandle.className = "resize-handle right";
+          clipElement.appendChild(leftHandle);
+          clipElement.appendChild(rightHandle);
+
+          makeClipDraggable(clipElement);
+          makeClipResizable(clipElement);
+
+          clipElement.addEventListener("click", (e) => {
+            if (isScissorsActive) handleCut(clipElement, e);
+            else {
+              if (isPlaying) togglePlayback();
+              const clipData = findClipInEDL(e.currentTarget.dataset.clipId);
+              currentTimelineTime = clipData.timelineStart;
+              playhead.style.left = `${currentTimelineTime * pixelsPerSecond}px`;
+              scrubToPosition({clientX: clipElement.getBoundingClientRect().left});
+            }
+          });
+          return clipElement;
+        }
+
+        function makeClipDraggable(element) {
+          element.onmousedown = (e) => {
+            if (isScissorsActive || e.target.classList.contains("resize-handle")) return;
+            e.preventDefault();
+            e.stopPropagation();
+            let offsetX = e.clientX - element.getBoundingClientRect().left;
+            document.onmousemove = (moveEvent) => {
+              const trackRect = element.parentElement.getBoundingClientRect();
+              const scrollOffset = element.parentElement.parentElement.scrollLeft;
+              let newLeft = moveEvent.clientX - trackRect.left - offsetX + scrollOffset;
+              element.style.left = `${Math.max(0, newLeft)}px`;
+            };
+            document.onmouseup = () => {
+              document.onmousemove = document.onmouseup = null;
+              const clipInEDL = findClipInEDL(element.dataset.clipId);
+              if (clipInEDL) {
+                clipInEDL.timelineStart = parseFloat(element.style.left) / pixelsPerSecond;
+              }
+            };
+          };
+        }
+
+        function makeClipResizable(clipEl) {
+          const leftHandle = clipEl.querySelector(".resize-handle.left");
+          const rightHandle = clipEl.querySelector(".resize-handle.right");
+
+          rightHandle.onmousedown = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const clipData = findClipInEDL(clipEl.dataset.clipId);
+            let startX = e.clientX;
+            let startWidth = clipEl.offsetWidth;
+            document.onmousemove = (moveEvent) => {
+              const deltaX = moveEvent.clientX - startX;
+              const newWidth = Math.max(10, startWidth + deltaX);
+              const newDuration = newWidth / pixelsPerSecond;
+              if (clipData.startOffset + newDuration > clipData.originalDuration) return;
+              clipEl.style.width = `${newWidth}px`;
+            };
+            document.onmouseup = () => {
+              document.onmousemove = document.onmouseup = null;
+              clipData.duration = parseFloat(clipEl.style.width) / pixelsPerSecond;
+            };
+          };
+          leftHandle.onmousedown = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const clipData = findClipInEDL(clipEl.dataset.clipId);
+            let startX = e.clientX;
+            let startWidth = clipEl.offsetWidth;
+            let startLeft = clipEl.offsetLeft;
+            document.onmousemove = (moveEvent) => {
+              const deltaX = moveEvent.clientX - startX;
+              const newWidth = startWidth - deltaX;
+              const newLeft = startLeft + deltaX;
+              if (newWidth < 10 || newLeft < 0) return;
+              clipEl.style.width = `${newWidth}px`;
+              clipEl.style.left = `${newLeft}px`;
+            };
+            document.onmouseup = () => {
+              document.onmousemove = document.onmouseup = null;
+              const deltaPx = clipEl.offsetLeft - startLeft;
+              const deltaTime = deltaPx / pixelsPerSecond;
+              clipData.startOffset += deltaTime;
+              clipData.duration -= deltaTime;
+              clipData.timelineStart = parseFloat(clipEl.style.left) / pixelsPerSecond;
+            };
+          };
+        }
+
+        function handleCut(clipElement, event) {
+          const clipId = clipElement.dataset.clipId;
+          const originalClipData = findClipInEDL(clipId);
+          const originalClipIndex = editDecisionList.video.indexOf(originalClipData);
+          if (!originalClipData) return;
+
+          const clickX = event.clientX - clipElement.getBoundingClientRect().left;
+          const cutTimeInClip = clickX / pixelsPerSecond;
+
+          if (cutTimeInClip <= 0.1 || cutTimeInClip >= originalClipData.duration - 0.1) return;
+
+          const newClipData = {
+            ...originalClipData,
+            id: `clip_${Date.now()}_${Math.random()}`,
+            startOffset: originalClipData.startOffset + cutTimeInClip,
+            duration: originalClipData.duration - cutTimeInClip,
+            timelineStart: originalClipData.timelineStart + cutTimeInClip,
+          };
+          originalClipData.duration = cutTimeInClip;
+
+          clipElement.style.width = `${originalClipData.duration * pixelsPerSecond}px`;
+          const newClipElement = createClipElement(newClipData, clipElement.textContent);
+          newClipElement.style.left = `${newClipData.timelineStart * pixelsPerSecond}px`;
+          clipElement.parentElement.appendChild(newClipElement);
+          editDecisionList.video.splice(originalClipIndex + 1, 0, newClipData);
+          showStatus("Clip split successfully!");
+        }
+
+        // --- Context Menu (Delete) ---
+        timelineContainer.addEventListener("contextmenu", (e) => {
+          const clipEl = e.target.closest(".timeline-clip");
+          if (clipEl) {
+            e.preventDefault();
+            contextClipTarget = clipEl;
+            contextMenu.style.display = "block";
+            contextMenu.style.left = `${e.clientX}px`;
+            contextMenu.style.top = `${e.clientY}px`;
+          }
+        });
+        deleteClipBtn.addEventListener("click", () => {
+          if (contextClipTarget) {
+            const clipId = contextClipTarget.dataset.clipId;
+            editDecisionList.video = editDecisionList.video.filter((c) => c.id !== clipId);
+            editDecisionList.audio = editDecisionList.audio.filter((c) => c.id !== clipId);
+            contextClipTarget.remove();
+          }
+          contextMenu.style.display = "none";
+        });
+        window.addEventListener("click", () => {
+          contextMenu.style.display = "none";
+        });
+
+        // --- Rendering ---
+        let removeProgressListener = null;
+
+        renderBtn.addEventListener("click", async () => {
+          if (isPlaying) {
+            togglePlayback();
+          }
+          if (editDecisionList.video.length === 0) {
+            showStatus("Nothing to render.", 2500);
+            return;
+          }
+
+          showRenderProgress("Starting render...");
+
+          if (removeProgressListener) removeProgressListener();
+          removeProgressListener = window.electronAPI.onRenderProgress(({progress}) => {
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${Math.floor(progress)}%`;
+          });
+
+          const sortedVideoClips = [...editDecisionList.video].sort((a, b) => a.timelineStart - b.timelineStart);
+          const sortedEDL = {video: sortedVideoClips, audio: []};
+
+          const result = await window.electronAPI.renderVideo(sortedEDL);
+
+          if (removeProgressListener) removeProgressListener();
+
+          if (result.success) {
+            showStatus(`Render finished successfully!`);
+          } else {
+            showStatus(`Render failed: ${result.message}`, 5000);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
