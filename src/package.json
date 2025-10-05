@@ -1,0 +1,102 @@
+{
+  "name": "refloow-video-editor",
+  "version": "1.0.0",
+  "description": "Advanced video and audio editor for creating clips",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "package": "electron-builder --win --publish never",
+    "package:mac": "electron-builder --mac --publish never",
+    "package:linux": "electron-builder --linux --publish never"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Refloow/Refloow-Video-Editor.git"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.refloow.videoeditor",
+    "productName": "Refloow Video Editor",
+    "icon": "build/icon.ico",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "**/*",
+      "!**/*.ts",
+      "!npm-debug.log*",
+      "!**/.git",
+      "!**/.vscode",
+      "!**/.idea",
+      "!**/*.map",
+      "!node_modules/.bin/**/*",
+      "!node_modules/electron/**/*",
+      "!dist/electron/**/*.js"
+    ],
+    "extraFiles": [
+      {
+        "from": "resources/",
+        "to": "resources/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asarUnpack": [
+      "**\\resources\\**"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "mac": {
+      "icon": "build/icon.ico",
+      "target": "dmg"
+    },
+    "linux": {
+      "icon": "build/icon.ico",
+      "target": "AppImage"
+    },
+    "npmRebuild": false,
+    "nsis": {
+      "oneClick": false,
+      "license": "LICENSE",
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "shortcutName": "Refloow Video Editor",
+      "createDesktopShortcut": true,
+      "perMachine": true,
+      "uninstallDisplayName": "Refloow Video Editor"
+    }
+  },
+  "keywords": [
+    "Video",
+    "Editor",
+    "Studio",
+    "FFMPEG",
+    "nodejs",
+    "javascript",
+    "desktopapp",
+    "desktop",
+    "app"
+  ],
+  "author": "Veljko Vuckovic (refloow.com)",
+  "license": "GNU Affero General Public License v3.0",
+  "bugs": {
+    "url": "https://github.com/Refloow/Refloow-Video-Editor/issues"
+  },
+  "homepage": "https://github.com/Refloow/Refloow-Video-Editor#readme"
+}
