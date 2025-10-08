@@ -6,7 +6,7 @@ Fully free! Privacy-first, fully offline desktop video editor built for creators
 
 > [!IMPORTANT]
 > > [Click here to join our discord server!](discord.gg/4enDY8yhuS) <br>
-> > Feel free to ask any questions, get support and report bugs
+> > Feel free to ask any questions, get support and report bugs 
 
 [![AGPL-3.0 License](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://opensource.org/licenses/AGPL-3.0)
 [![Latest Release](https://img.shields.io/github/v/release/Refloow/Refloow-Video-Editor)](https://github.com/Refloow/Refloow-Video-Editor/releases)
