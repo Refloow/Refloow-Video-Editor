@@ -34,7 +34,7 @@ Editing showcase
 
 ## 🛠️ Contributing & Feedback
 We welcome contributions, feedback, and bug reports!
-Feel free to open issues or pull requests—or chat with us on [Discord](https://discord.com/invite/4enDY8yhuS).
+Feel free to open issues or pull requests—or chat with us on [Discord](https://discord.com/invite/4enDY8yhuS)!
 
 ## 📃 License
 This project is licensed under **AGPL-3.0** to ensure it remains free, open, and protected from proprietary forks.
