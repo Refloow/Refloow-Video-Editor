@@ -2,9 +2,8 @@
 
 Fully free! Privacy-first, fully offline desktop video editor built for creators who value control. No watermarks, no server-side processing, and no hidden tracking just fast, intuitive editing with multi-track support, real-time preview, and essential tools. Whether you're trimming clips or building full timelines, you can edit without compromise. ❤️ 
 
-⭐ Leave a star (its free) on github to support my work if you want more free and amazing features built into the editor
-
 > [!IMPORTANT]
+> ⭐ Leave a star (its free) on github to support my work if you want more free and amazing features built into the editor
 > > [Click here to join our discord server!](discord.gg/4enDY8yhuS) <br>
 > > Feel free to ask any questions, get support and report bugs
 
