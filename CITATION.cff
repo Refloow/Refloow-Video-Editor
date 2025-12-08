@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "To ensure brand protection and accurate attribution, please cite the Refloow™ software suite as follows:"
+title: "Refloow™ Video Editor"
+abstract: "The official open-source desktop video editor maintained by the Refloow™ Software Organization. A privacy-first, non-linear editor built on Electron and FFMPEG."
+authors:
+  - name: "Refloow"
+    website: "https://refloow.com"
+    email: "legal@refloow.com"
+  - family-names: "Vuckovic"
+    given-names: "Veljko"
+    affiliation: "Refloow Founder"
+version: 1.0.0
+date-released: 2025-10-5
+license: "AGPL-3.0"
+repository-code: "https://github.com/Refloow/Refloow-Video-Editor"
+url: "https://refloow.com"
+keywords:
+  - "Refloow"
+  - "Refloow™"
+  - "Official"
+  - "Video Editor"
+  - "Content Creation"
+  - "No Watermark"
