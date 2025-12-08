@@ -22,6 +22,7 @@
   "build": {
     "appId": "com.refloow.videoeditor",
     "productName": "Refloow Video Editor",
+    "copyright": "Copyright © Refloow",
     "icon": "build/icon.ico",
     "asar": true,
     "directories": {
@@ -91,9 +92,25 @@
     "javascript",
     "desktopapp",
     "desktop",
-    "app"
+    "app",
+    "privacy-first",
+    "Refloow™"
   ],
-  "author": "Veljko Vuckovic (refloow.com)",
+"author": {
+    "name": "Refloow",
+    "email": "legal@refloow.com",
+    "url": "https://refloow.com"
+  },
+  "contributors": [
+    {
+      "name": "Veljko Vuckovic",
+      "url": "https://github.com/Refloow"
+    }
+  ],
+  "funding": {
+    "type": "individual",
+    "url": "https://refloow.com"
+  },
   "license": "GNU Affero General Public License v3.0",
   "bugs": {
     "url": "https://github.com/Refloow/Refloow-Video-Editor/issues"
