@@ -1,4 +1,4 @@
-# Refloow-Video-Editor (Desktop App)
+# Refloow-Video-Editor Official Github Repository
 
 Fully free! Privacy-first, fully offline desktop video editor built for creators who value control. No watermarks, no server-side processing, and no hidden tracking just fast, intuitive editing with multi-track support, real-time preview, and essential tools. Whether you're trimming clips or building full timelines, you can edit without compromise. ❤️ 
 
