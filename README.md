@@ -11,8 +11,6 @@ Fully free! Privacy-first, fully offline desktop video editor built for creators
 [![Latest Release](https://img.shields.io/github/v/release/Refloow/Refloow-Video-Editor)](https://github.com/Refloow/Refloow-Video-Editor/releases)
 
 
-<img width="614.4" height="409.6" alt="image" src="https://github.com/user-attachments/assets/a26cf49e-d01b-4365-9e9c-bd382ca5857c" />
-
 General ui showcase
 <img width="2540" height="1328" alt="image" src="https://github.com/user-attachments/assets/6af5f607-968c-43f1-8c74-ee9b29758b65" />
 
