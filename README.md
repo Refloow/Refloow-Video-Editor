@@ -10,6 +10,7 @@ Fully free! Privacy-first, fully offline desktop video editor built for creators
 [![AGPL-3.0 License](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://opensource.org/licenses/AGPL-3.0)
 [![Latest Release](https://img.shields.io/github/v/release/Refloow/Refloow-Video-Editor)](https://github.com/Refloow/Refloow-Video-Editor/releases)
 
+Large update coming out soon
 
 General ui showcase
 <img width="2540" height="1328" alt="image" src="https://github.com/user-attachments/assets/6af5f607-968c-43f1-8c74-ee9b29758b65" />
