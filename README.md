@@ -13,7 +13,7 @@ Fully free! Privacy-first, fully offline desktop video editor built for creators
 Large update coming out soon
 
 General ui showcase
-<img width="2540" height="1328" alt="image" src="https://github.com/user-attachments/assets/6af5f607-968c-43f1-8c74-ee9b29758b65" />
+<img width="1919" height="1023" alt="image" src="https://github.com/user-attachments/assets/488a5661-fe57-422f-82e5-5b128fa41db5" />
 
 Editing showcase
 <img width="1806" height="1254" alt="showcase1" src="https://github.com/user-attachments/assets/31b3f75c-dc20-4def-9982-e3619e1e67eb" />
