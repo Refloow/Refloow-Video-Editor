@@ -113,7 +113,6 @@
       #context-menu button:hover {
         background-color: #4a5568;
       }
-      /* New styles for progress bar */
       #progress-container {
         width: 100%;
         background-color: #4a5568;
@@ -130,12 +129,44 @@
         color: white;
         transition: width 0.2s ease-in-out;
       }
+      
+      /* Resizer Styles */
+      .resizer {
+        background-color: #374151;
+        transition: background-color 0.2s;
+      }
+      .resizer:hover, .resizer:active {
+        background-color: #3b82f6;
+      }
+      .resizer-v {
+        width: 8px;
+        cursor: col-resize;
+        border-radius: 4px;
+        margin: 0 4px;
+      }
+      .resizer-h {
+        height: 8px;
+        width: 100%;
+        cursor: row-resize;
+        border-radius: 4px;
+        margin: 4px 0;
+      }
+
+      /* Panel Drag & Drop Styles */
+      .panel-slot {
+        transition: box-shadow 0.2s ease-in-out;
+      }
+      .panel-header:active {
+        cursor: grabbing;
+      }
+      .panel-content {
+        transition: opacity 0.2s;
+      }
     </style>
     <link rel="stylesheet" href="./resources/rsmsinter.css" />
   </head>
 
   <body class="bg-gray-800 text-white flex flex-col h-screen overflow-hidden">
-    <!-- Top Bar -->
     <header class="bg-gray-900 p-2 flex items-center justify-between shadow-md z-10">
       <h1 class="text-xl font-bold">Refloow Video Editor</h1>
       <div class="flex items-center space-x-2">
@@ -148,63 +179,89 @@
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow flex p-4 space-x-4 overflow-hidden">
-      <!-- Left Panel (Video Preview and Media Pool) -->
-      <div class="w-1/3 flex flex-col space-y-4">
-        <div class="flex-grow bg-black rounded-lg flex items-center justify-center relative">
-          <video id="videoPlayer" class="max-w-full max-h-full"></video>
-          <div id="player-status" class="absolute text-gray-400">No media loaded</div>
+    <main class="flex-grow flex flex-col p-4 overflow-hidden relative">
+      
+      <div id="top-container" class="flex flex-row w-full" style="height: 60%;">
+        
+        <div id="slot-1" class="panel-slot relative rounded-lg overflow-hidden flex flex-col" style="width: 25%;">
+          
+          <div id="panel-media" class="panel-content flex flex-col bg-gray-900 w-full h-full p-2 border border-gray-700 rounded-lg shadow-lg">
+            <div class="panel-header flex items-center mb-2 cursor-move p-1 rounded hover:bg-gray-800 transition-colors" draggable="true" title="Drag to re-arrange">
+              <svg class="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/></svg>
+              <h2 class="text-lg font-semibold select-none">Media Pool</h2>
+            </div>
+            <div id="mediaPool" class="space-y-2 overflow-y-auto flex-grow bg-gray-800 rounded p-2">
+              <p class="text-gray-500">Imported files will show up here.</p>
+            </div>
+          </div>
         </div>
-        <div class="h-1/3 bg-gray-900 rounded-lg p-3 overflow-y-auto">
-          <h2 class="text-lg font-semibold mb-2">Media Pool</h2>
-          <div id="mediaPool" class="space-y-2">
-            <p class="text-gray-500">Imported files will show up here.</p>
+
+        <div id="resizer-v" class="resizer resizer-v flex-shrink-0"></div>
+
+        <div id="slot-2" class="panel-slot relative rounded-lg overflow-hidden flex-grow flex flex-col">
+          
+          <div id="panel-video" class="panel-content flex flex-col bg-gray-900 w-full h-full border border-gray-700 rounded-lg overflow-hidden shadow-lg">
+            <div class="panel-header bg-gray-800 p-2 flex items-center cursor-move border-b border-gray-700" draggable="true" title="Drag to re-arrange">
+              <svg class="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/></svg>
+              <span class="text-sm font-bold text-gray-300 select-none">Video Preview</span>
+            </div>
+            <div class="flex-grow bg-black relative flex items-center justify-center overflow-hidden">
+              <video id="videoPlayer" class="max-w-full max-h-full"></video>
+              <div id="player-status" class="absolute text-gray-400">No media loaded</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Right Panel (Timeline) -->
-      <div class="w-2/3 flex flex-col bg-gray-900 rounded-lg p-3 overflow-hidden">
-        <div class="flex items-center mb-2 space-x-4">
-          <h2 class="text-lg font-semibold">Timeline</h2>
-          <div id="playback-controls" class="flex items-center space-x-2 bg-gray-800 p-1 rounded-lg">
-            <button id="play-pause-btn" class="p-2 rounded-lg bg-gray-700 hover:bg-blue-600" title="Play/Pause">
-              <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </button>
-          </div>
-          <button id="scissorsTool" class="p-2 rounded-lg bg-gray-700 hover:bg-red-600 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors" title="Scissors Tool">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.412 9.588a2 2 0 11-2.828 2.828M11.586 12.414L6 18m0-6l5.586-5.586M9 6a2 2 0 100-4 2 2 0 000 4zm11 11a2 2 0 100-4 2 2 0 000 4z" /></svg>
-          </button>
-          <button id="add-video-track-btn" class="p-2 rounded-lg bg-gray-700 hover:bg-blue-600" title="Add Video Track">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-          </button>
-        </div>
-        <div id="timelineContainer" class="flex-grow bg-gray-800 rounded-lg overflow-x-auto relative p-4">
-          <div id="playhead"></div>
-          <div id="tracks-container">
-            <div id="videoTrack_1" class="track video-track relative h-20 bg-gray-700/50 rounded-lg mb-2">
-              <div class="p-2 text-xs font-bold text-gray-400">Video Track 1</div>
+      <div id="resizer-h" class="resizer resizer-h flex-shrink-0"></div>
+
+      <div id="bottom-container" class="flex flex-row flex-grow w-full">
+        
+        <div id="slot-3" class="panel-slot relative rounded-lg overflow-hidden w-full flex flex-col">
+          
+          <div id="panel-timeline" class="panel-content flex flex-col bg-gray-900 w-full h-full p-3 border border-gray-700 rounded-lg shadow-lg">
+            <div class="panel-header flex items-center mb-2 space-x-4 cursor-move p-1 rounded hover:bg-gray-800 transition-colors" draggable="true" title="Drag to re-arrange">
+              <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/></svg>
+              <h2 class="text-lg font-semibold select-none flex-grow">Timeline</h2>
+              
+              <div id="playback-controls" class="flex items-center space-x-2 bg-gray-800 p-1 rounded-lg">
+                <button id="play-pause-btn" class="p-2 rounded-lg bg-gray-700 hover:bg-blue-600" title="Play/Pause">
+                  <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </button>
+              </div>
+              <button id="scissorsTool" class="p-2 rounded-lg bg-gray-700 hover:bg-red-600 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors" title="Scissors Tool">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.412 9.588a2 2 0 11-2.828 2.828M11.586 12.414L6 18m0-6l5.586-5.586M9 6a2 2 0 100-4 2 2 0 000 4zm11 11a2 2 0 100-4 2 2 0 000 4z" /></svg>
+              </button>
+              <button id="add-video-track-btn" class="p-2 rounded-lg bg-gray-700 hover:bg-blue-600" title="Add Video Track">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+              </button>
             </div>
-            <div id="audioTrack" class="track audio-track relative h-20 bg-gray-700/50 rounded-lg">
-              <div class="p-2 text-xs font-bold text-gray-400">Audio Track</div>
+            
+            <div id="timelineContainer" class="flex-grow bg-gray-800 rounded-lg overflow-x-auto relative p-4">
+              <div id="playhead"></div>
+              <div id="tracks-container" class="h-full w-full relative">
+                <div id="videoTrack_1" class="track video-track relative h-20 bg-gray-700/50 rounded-lg mb-2">
+                  <div class="p-2 text-xs font-bold text-gray-400">Video Track 1</div>
+                </div>
+                <div id="audioTrack" class="track audio-track relative h-20 bg-gray-700/50 rounded-lg">
+                  <div class="p-2 text-xs font-bold text-gray-400">Audio Track</div>
+                </div>
+              </div>
+              <div class="tooltip" id="timelineTooltip"></div>
             </div>
           </div>
-          <div class="tooltip" id="timelineTooltip"></div>
         </div>
       </div>
     </main>
 
-    <!-- Context Menu -->
     <div id="context-menu">
       <button id="delete-clip-btn">Delete Clip</button>
     </div>
 
-    <!-- Status Bar / Message Modal -->
     <div id="statusModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div id="status-content" class="bg-gray-700 p-6 rounded-lg shadow-xl min-w-[300px]">
         <p id="statusMessage"></p>
@@ -216,6 +273,104 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        // --- Panel Swapping & Resizing Logic ---
+        const resizerV = document.getElementById('resizer-v');
+        const resizerH = document.getElementById('resizer-h');
+        const topContainer = document.getElementById('top-container');
+        const slot1 = document.getElementById('slot-1');
+        
+        let isResizingV = false;
+        let isResizingH = false;
+        let draggedPanel = null;
+
+        // Panel Drag and Drop
+        document.querySelectorAll('.panel-header').forEach(header => {
+          header.addEventListener('dragstart', (e) => {
+            draggedPanel = header.closest('.panel-content');
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => draggedPanel.classList.add('opacity-40'), 0);
+          });
+          
+          header.addEventListener('dragend', () => {
+            if(draggedPanel) draggedPanel.classList.remove('opacity-40');
+            draggedPanel = null;
+            document.querySelectorAll('.panel-slot').forEach(s => s.classList.remove('ring-2', 'ring-blue-500'));
+          });
+        });
+
+        document.querySelectorAll('.panel-slot').forEach(slot => {
+          slot.addEventListener('dragover', (e) => {
+            // Only react if we are dragging a PANEL (not a media file)
+            if (draggedPanel) {
+              e.preventDefault();
+              slot.classList.add('ring-2', 'ring-blue-500');
+            }
+          });
+          slot.addEventListener('dragleave', () => {
+            slot.classList.remove('ring-2', 'ring-blue-500');
+          });
+          slot.addEventListener('drop', (e) => {
+            if (draggedPanel) {
+              e.preventDefault();
+              e.stopPropagation(); // Prevents bubbling to lower dropzones
+              slot.classList.remove('ring-2', 'ring-blue-500');
+              
+              const targetPanel = slot.querySelector('.panel-content');
+              const sourceSlot = draggedPanel.parentElement;
+              
+              if (targetPanel && sourceSlot !== slot) {
+                // Perform the DOM Swap
+                sourceSlot.appendChild(targetPanel);
+                slot.appendChild(draggedPanel);
+              }
+            }
+          });
+        });
+
+        // Splitter logic
+        resizerV.addEventListener('mousedown', (e) => {
+          isResizingV = true;
+          document.body.style.cursor = 'col-resize';
+          e.preventDefault(); 
+        });
+
+        resizerH.addEventListener('mousedown', (e) => {
+          isResizingH = true;
+          document.body.style.cursor = 'row-resize';
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isResizingV && !isResizingH) return;
+
+          if (isResizingV) {
+            // Calculate width relative to the top container
+            const topRect = topContainer.getBoundingClientRect();
+            let newWidth = ((e.clientX - topRect.left) / topRect.width) * 100;
+            if (newWidth > 15 && newWidth < 85) {
+              slot1.style.width = `${newWidth}%`;
+            }
+          }
+
+          if (isResizingH) {
+             // Calculate height relative to the main container
+            const mainRect = document.querySelector('main').getBoundingClientRect();
+            let newHeight = ((e.clientY - mainRect.top) / mainRect.height) * 100;
+            if (newHeight > 10 && newHeight < 90) {
+              topContainer.style.height = `${newHeight}%`;
+            }
+          }
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (isResizingV || isResizingH) {
+            isResizingV = false;
+            isResizingH = false;
+            document.body.style.cursor = 'default';
+          }
+        });
+
+        // --- Core Application Logic Below ---
         const importBtn = document.getElementById("importBtn");
         const renderBtn = document.getElementById("renderBtn");
         const mediaPool = document.getElementById("mediaPool");
@@ -266,7 +421,6 @@
               statusModal.classList.add("hidden");
             }, duration);
           } else {
-            // For persistent messages like rendering, hide previous progress
             progressContainer.classList.add("hidden");
           }
         }
@@ -484,14 +638,23 @@
             mediaElement.className = "bg-gray-700 p-2 rounded-lg cursor-pointer hover:bg-gray-600";
             mediaElement.textContent = file.name;
             mediaElement.draggable = true;
-            mediaElement.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", file.id));
+            mediaElement.addEventListener("dragstart", (e) => {
+                // Flag to ensure standard panel dragging doesn't intercept
+                e.dataTransfer.setData("text/plain", file.id)
+            });
             mediaPool.appendChild(mediaElement);
           });
         });
 
         // --- Timeline Drag and Drop ---
-        tracksContainer.addEventListener("dragover", (e) => e.preventDefault());
+        tracksContainer.addEventListener("dragover", (e) => {
+            // Ignore if we are dragging a whole panel instead of media
+            if(draggedPanel) return;
+            e.preventDefault()
+        });
+        
         tracksContainer.addEventListener("drop", (e) => {
+          if(draggedPanel) return; // Prevent conflict with panel swap
           e.preventDefault();
           const targetTrack = e.target.closest(".track");
           if (!targetTrack) return;
