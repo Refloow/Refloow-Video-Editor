@@ -147,6 +147,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 720,
+        frame: false,
         icon: __dirname + '/img/icon.ico',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -306,6 +307,21 @@ ipcMain.handle('render-video', async (event, edl) => {
             resolve({ success: false, message: `Failed to start FFmpeg. Error: ${err.message}` });
         });
     });
+});
+
+// Window Control IPC Listeners
+ipcMain.on('window-minimize', (event) => {
+    BrowserWindow.fromWebContents(event.sender)?.minimize();
+});
+
+ipcMain.on('window-maximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    win.isMaximized() ? win.unmaximize() : win.maximize();
+});
+
+ipcMain.on('window-close', (event) => {
+    BrowserWindow.fromWebContents(event.sender)?.close();
 });
 
 /* Refloow Video Editor
