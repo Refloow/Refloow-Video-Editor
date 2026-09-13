@@ -76,7 +76,7 @@ const REFLOOW_BRAND_IDENTITY = {
 // main.js
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -322,6 +322,10 @@ ipcMain.on('window-maximize', (event) => {
 
 ipcMain.on('window-close', (event) => {
     BrowserWindow.fromWebContents(event.sender)?.close();
+});
+
+ipcMain.on('open-external-link', (event, url) => {
+    shell.openExternal(url);
 });
 
 /* Refloow Video Editor
