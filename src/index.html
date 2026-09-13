@@ -12,6 +12,10 @@
         user-select: none;
       }
 
+      .titlebar-drag { -webkit-app-region: drag; }
+      .no-drag { -webkit-app-region: no-drag; cursor: pointer; }
+      .dropdown:hover .dropdown-content { display: block; }
+
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -167,17 +171,50 @@
   </head>
 
   <body class="bg-gray-800 text-white flex flex-col h-screen overflow-hidden">
-    <header class="bg-gray-900 p-2 flex items-center justify-between shadow-md z-10">
-      <h1 class="text-xl font-bold">Refloow Video Editor</h1>
-      <div class="flex items-center space-x-2">
-        <button id="importBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-          Import Media
-        </button>
-        <button id="renderBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-          Render Video
-        </button>
+<header class="bg-gray-900 flex items-center justify-between shadow-md z-20 titlebar-drag h-10 w-full shrink-0 border-b border-gray-700">
+  <!-- Far Left -->
+  <div class="flex items-center h-full space-x-4 pl-3">
+    <h1 class="text-sm font-bold tracking-wider text-gray-200">Refloow Video Editor</h1>
+    
+    <div class="flex items-center h-full space-x-1 relative">
+      <div class="dropdown h-full flex items-center">
+        <button class="no-drag text-xs px-2 py-1 rounded hover:bg-gray-800 text-gray-300 transition-colors">About ▾</button>
+        <div class="dropdown-content hidden absolute top-full left-0 bg-gray-800 border border-gray-700 rounded shadow-lg min-w-[120px] py-1 z-50">
+          <a href="#" class="no-drag block px-4 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white">App Info</a>
+          <a href="#" class="no-drag block px-4 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white">Developer</a>
+        </div>
       </div>
-    </header>
+      <button id="openSettingsBtn" class="no-drag text-xs px-2 py-1 rounded hover:bg-gray-800 text-gray-300 transition-colors">Settings</button>
+    </div>
+  </div>
+
+  <!-- Far Right -->
+  <div class="flex items-center h-full">
+    <div class="flex items-center space-x-2 px-4 no-drag">
+      <button id="importBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded transition-colors">
+        Import Media
+      </button>
+      <button id="renderBtn" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded transition-colors">
+        Render Video
+      </button>
+    </div>
+    
+    <div class="flex h-full text-gray-400">
+      <button id="minimizeBtn" class="no-drag flex items-center justify-center w-10 h-full hover:bg-gray-800 hover:text-white transition-colors">&#8211;</button>
+      <button id="maximizeBtn" class="no-drag flex items-center justify-center w-10 h-full hover:bg-gray-800 hover:text-white transition-colors">&#9744;</button>
+      <button id="closeBtn" class="no-drag flex items-center justify-center w-10 h-full hover:bg-red-600 hover:text-white transition-colors">&#10005;</button>
+    </div>
+  </div>
+</header>
+
+<!-- Settings Modal Container -->
+<div id="settingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 no-drag">
+  <div class="bg-gray-800 p-6 rounded-lg shadow-xl min-w-[300px] border border-gray-700">
+    <h2 class="text-xl mb-4 font-bold">Settings</h2>
+    <p class="text-gray-400 mb-6 text-sm">Application preferences go here.</p>
+    <button id="closeSettingsBtn" class="bg-gray-600 hover:bg-gray-500 py-1 px-4 rounded text-sm font-bold">Close</button>
+  </div>
+</div>
 
     <main class="flex-grow flex flex-col p-4 overflow-hidden relative">
       
@@ -893,6 +930,20 @@
             showStatus(`Render failed: ${result.message}`, 5000);
           }
         });
+      });
+
+      // --- Window Controls ---
+      document.getElementById('minimizeBtn').addEventListener('click', () => window.electronAPI.minimize());
+      document.getElementById('maximizeBtn').addEventListener('click', () => window.electronAPI.maximize());
+      document.getElementById('closeBtn').addEventListener('click', () => window.electronAPI.close());
+
+      // --- Settings Modal ---
+      const settingsModal = document.getElementById('settingsModal');
+      document.getElementById('openSettingsBtn').addEventListener('click', () => {
+          settingsModal.classList.remove('hidden');
+      });
+      document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+          settingsModal.classList.add('hidden');
       });
     </script>
   </body>
