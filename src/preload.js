@@ -63,14 +63,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onRenderProgress: (callback) => {
         const handler = (_event, value) => callback(value);
         ipcRenderer.on('render-progress', handler);
-        
-        return () => {
-            ipcRenderer.removeListener('render-progress', handler);
-        };
+        return () => ipcRenderer.removeListener('render-progress', handler);
     },
     minimize: () => ipcRenderer.send('window-minimize'),
     maximize: () => ipcRenderer.send('window-maximize'),
-    close: () => ipcRenderer.send('window-close')
+    close: () => ipcRenderer.send('window-close'),
+    openLink: (url) => ipcRenderer.send('open-external-link', url)
 });
 
 /* Refloow Video Editor
