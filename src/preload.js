@@ -67,7 +67,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return () => {
             ipcRenderer.removeListener('render-progress', handler);
         };
-    }
+    },
+    minimize: () => ipcRenderer.send('window-minimize'),
+    maximize: () => ipcRenderer.send('window-maximize'),
+    close: () => ipcRenderer.send('window-close')
 });
 
 /* Refloow Video Editor
