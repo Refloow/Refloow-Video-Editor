@@ -725,7 +725,8 @@
           contextMenu.style.left = `${e.clientX}px`; contextMenu.style.top = `${e.clientY}px`;
         }
       });
-        muteClipBtn.addEventListener("click", () => {
+      
+      muteClipBtn.addEventListener("click", () => {
         if (contextClipTarget) {
           const clipId = contextClipTarget.dataset.clipId;
           const clipData = findClipInEDL(clipId);
@@ -741,6 +742,31 @@
         }
         contextMenu.style.display = "none";
       });
+
+      deleteClipBtn.addEventListener("click", () => {
+        if (contextClipTarget) {
+          const clipId = contextClipTarget.dataset.clipId;
+          
+          editDecisionList.video = editDecisionList.video.filter((c) => c.id !== clipId);
+          editDecisionList.audio = editDecisionList.audio.filter((c) => c.id !== clipId);
+          
+          if (activeAudioElements[clipId]) {
+            activeAudioElements[clipId].pause();
+            delete activeAudioElements[clipId];
+          }
+          
+          if (activeClip && activeClip.id === clipId) {
+            videoPlayer.pause();
+            videoPlayer.src = "";
+            activeClip = null;
+          }
+
+          contextClipTarget.remove();
+          contextClipTarget = null;
+        }
+        contextMenu.style.display = "none";
+      });
+
       window.addEventListener("click", () => { contextMenu.style.display = "none"; });
 
       let removeProgressListener = null;
