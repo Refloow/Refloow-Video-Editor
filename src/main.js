@@ -81,7 +81,6 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-// Add a guard clause to ensure the app is run with Electron, not Node
 if (!app) {
     console.error("This script must be run through the Electron runtime.");
     console.error("Please run the app using 'npm start' from your project directory.");
@@ -91,12 +90,8 @@ if (!app) {
 let mainWindow;
 let ffmpegPath;
 let ffprobePath;
+let ffplayPath;
 
-/**
- * Probes a video file to get its properties like width, height, and duration.
- * @param {string} filePath - The path to the video file.
- * @returns {Promise<{width: number, height: number, duration: number}>}
- */
 function getVideoProperties(filePath) {
     return new Promise((resolve, reject) => {
         const args = [
@@ -110,25 +105,18 @@ function getVideoProperties(filePath) {
         let jsonData = '';
         const ffprobeProcess = spawn(ffprobePath, args);
 
-        ffprobeProcess.stdout.on('data', (data) => {
-            jsonData += data.toString();
-        });
-
-        ffprobeProcess.stderr.on('data', (data) => {
-            console.error(`ffprobe stderr: ${data}`);
-        });
+        ffprobeProcess.stdout.on('data', (data) => { jsonData += data.toString(); });
+        ffprobeProcess.stderr.on('data', (data) => { console.error(`ffprobe stderr: ${data}`); });
 
         ffprobeProcess.on('close', (code) => {
-            if (code !== 0) {
-                return reject(new Error(`ffprobe exited with code ${code} for file ${filePath}`));
-            }
+            if (code !== 0) return reject(new Error(`ffprobe exited with code ${code} for file ${filePath}`));
             try {
                 const parsedData = JSON.parse(jsonData);
                 const stream = parsedData.streams[0];
                 resolve({
-                    width: stream.width,
-                    height: stream.height,
-                    duration: parseFloat(stream.duration)
+                    width: stream ? stream.width : 1920,
+                    height: stream ? stream.height : 1080,
+                    duration: stream ? parseFloat(stream.duration) : 0
                 });
             } catch (e) {
                 reject(new Error(`Failed to parse ffprobe output for ${filePath}. Error: ${e.message}`));
@@ -141,9 +129,7 @@ function getVideoProperties(filePath) {
     });
 }
 
-
 function createWindow() {
-    // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 720,
@@ -163,18 +149,15 @@ app.whenReady().then(() => {
     const isDev = !app.isPackaged;
     const ffmpegExecutable = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
     const ffprobeExecutable = process.platform === 'win32' ? 'ffprobe.exe' : 'ffprobe';
-    const ffplayExecutable = process.platform === 'win32' ? 'ffplay.exe' : 'ffplay'; // If you have ffplay
+    const ffplayExecutable = process.platform === 'win32' ? 'ffplay.exe' : 'ffplay'; 
 
     if (isDev) {
         ffmpegPath = path.join(__dirname, 'resources', ffmpegExecutable);
         ffprobePath = path.join(__dirname, 'resources', ffprobeExecutable);
         ffplayPath = path.join(__dirname, 'resources', ffplayExecutable);
     } else {
-        // For packaged apps, `process.resourcesPath` points to the `resources` directory
-        // but `asarUnpack` places our tools in `resources/app.asar.unpacked/resources`
         const unpackedResourcesPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'resources');
         
-        // Verify the path exists before assigning, for better error handling
         if (!fs.existsSync(unpackedResourcesPath)) {
             console.error(`Error: Unpacked resources path not found: ${unpackedResourcesPath}`);
             dialog.showErrorBox('Initialization Error', `Required media tools not found. Please ensure the app is correctly installed. Path: ${unpackedResourcesPath}`);
@@ -186,7 +169,6 @@ app.whenReady().then(() => {
         ffprobePath = path.join(unpackedResourcesPath, ffprobeExecutable);
         ffplayPath = path.join(unpackedResourcesPath, ffplayExecutable);
 
-        // Basic check to see if executables exist
         if (!fs.existsSync(ffmpegPath)) console.error(`FFmpeg not found at: ${ffmpegPath}`);
         if (!fs.existsSync(ffprobePath)) console.error(`FFprobe not found at: ${ffprobePath}`);
         if (!fs.existsSync(ffplayPath)) console.error(`FFplay not found at: ${ffplayPath}`);
@@ -205,12 +187,11 @@ app.on('window-all-closed', () => {
 ipcMain.handle('dialog:openFile', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
         properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Movies', extensions: ['mkv', 'avi', 'mp4', 'mov'] }]
+        filters: [{ name: 'Media Files', extensions: ['mkv', 'avi', 'mp4', 'mov', 'mp3', 'wav', 'aac', 'm4a'] }]
     });
     return canceled ? [] : filePaths;
 });
 
-// Handle final video rendering
 ipcMain.handle('render-video', async (event, edl) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
         title: 'Save Video',
@@ -218,16 +199,15 @@ ipcMain.handle('render-video', async (event, edl) => {
         filters: [{ name: 'MP4 Video', extensions: ['mp4'] }]
     });
 
-    if (canceled || !filePath) {
-        return { success: false, message: 'Render cancelled.' };
-    }
+    if (canceled || !filePath) return { success: false, message: 'Render cancelled.' };
 
     const videoClips = edl.video;
+    const audioClips = edl.audio;
+
     if (!videoClips || videoClips.length === 0) {
         return { success: false, message: 'No video clips to render.' };
     }
     
-    // --- Advanced FFmpeg Command Generation ---
     let targetWidth, targetHeight;
     let totalDuration = videoClips.reduce((acc, clip) => acc + clip.duration, 0);
 
@@ -240,23 +220,43 @@ ipcMain.handle('render-video', async (event, edl) => {
         return { success: false, message: `Failed to read video properties: ${error.message}` };
     }
     
-    const uniqueFiles = [...new Set(videoClips.map(clip => clip.filePath))];
+    const uniqueFiles = [...new Set([...videoClips, ...audioClips].map(clip => clip.filePath))];
     const inputs = uniqueFiles.flatMap(file => ['-i', file]);
     const fileIndexMap = new Map(uniqueFiles.map((file, index) => [file, index]));
 
     let filterComplex = '';
     let concatStreams = '';
 
+    // Process Video Clips 
     videoClips.forEach((clip, index) => {
         const inputIndex = fileIndexMap.get(clip.filePath);
         const endOffset = clip.startOffset + clip.duration;
+        const volFilter = clip.isMuted ? ',volume=0' : '';
         filterComplex += `[${inputIndex}:v:0]trim=start=${clip.startOffset}:end=${endOffset},setpts=PTS-STARTPTS[v${index}_t];`;
         filterComplex += `[v${index}_t]scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=decrease,pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1[v${index}];`;
-        filterComplex += `[${inputIndex}:a:0]atrim=start=${clip.startOffset}:end=${endOffset},asetpts=PTS-STARTPTS[a${index}];`;
+        filterComplex += `[${inputIndex}:a:0]atrim=start=${clip.startOffset}:end=${endOffset},asetpts=PTS-STARTPTS${volFilter}[a${index}];`;
         concatStreams += `[v${index}][a${index}]`;
     });
     
-    filterComplex += `${concatStreams}concat=n=${videoClips.length}:v=1:a=1[outv][outa]`;
+    filterComplex += `${concatStreams}concat=n=${videoClips.length}:v=1:a=1[outv][outa_base];`;
+
+    // Process additional separate Audio Clips
+    if (audioClips && audioClips.length > 0) {
+        let amixInputs = '[outa_base]';
+        audioClips.forEach((clip, index) => {
+            const inputIndex = fileIndexMap.get(clip.filePath);
+            const endOffset = clip.startOffset + clip.duration;
+            const delayMs = Math.round(clip.timelineStart * 1000);
+            const volFilter = clip.isMuted ? ',volume=0' : ''; // <-- Check mute
+            
+            filterComplex += `[${inputIndex}:a:0]atrim=start=${clip.startOffset}:end=${endOffset},asetpts=PTS-STARTPTS${volFilter},adelay=${delayMs}|${delayMs}[aud${index}];`;
+            amixInputs += `[aud${index}]`;
+        });
+        
+        filterComplex += `${amixInputs}amix=inputs=${1 + audioClips.length}:duration=first:dropout_transition=2[outa]`;
+    } else {
+        filterComplex += `[outa_base]anull[outa]`;
+    }
 
     const args = [
         '-progress', 'pipe:1',
@@ -273,10 +273,7 @@ ipcMain.handle('render-video', async (event, edl) => {
 
     return new Promise((resolve) => {
         const ffmpegProcess = spawn(ffmpegPath, args);
-
-        const sendProgress = (progress) => {
-            mainWindow.webContents.send('render-progress', { progress });
-        };
+        const sendProgress = (progress) => mainWindow.webContents.send('render-progress', { progress });
         
         ffmpegProcess.stdout.on('data', (data) => {
             const output = data.toString();
@@ -289,9 +286,7 @@ ipcMain.handle('render-video', async (event, edl) => {
         });
         
         let stderr = '';
-        ffmpegProcess.stderr.on('data', (data) => {
-            stderr += data.toString();
-        });
+        ffmpegProcess.stderr.on('data', (data) => { stderr += data.toString(); });
 
         ffmpegProcess.on('close', (code) => {
             if (code === 0) {
@@ -303,30 +298,19 @@ ipcMain.handle('render-video', async (event, edl) => {
             }
         });
         
-        ffmpegProcess.on('error', (err) => {
-            resolve({ success: false, message: `Failed to start FFmpeg. Error: ${err.message}` });
-        });
+        ffmpegProcess.on('error', (err) => resolve({ success: false, message: `Failed to start FFmpeg. Error: ${err.message}` }));
     });
 });
 
 // Window Control IPC Listeners
-ipcMain.on('window-minimize', (event) => {
-    BrowserWindow.fromWebContents(event.sender)?.minimize();
-});
-
+ipcMain.on('window-minimize', (event) => BrowserWindow.fromWebContents(event.sender)?.minimize());
 ipcMain.on('window-maximize', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
     win.isMaximized() ? win.unmaximize() : win.maximize();
 });
-
-ipcMain.on('window-close', (event) => {
-    BrowserWindow.fromWebContents(event.sender)?.close();
-});
-
-ipcMain.on('open-external-link', (event, url) => {
-    shell.openExternal(url);
-});
+ipcMain.on('window-close', (event) => BrowserWindow.fromWebContents(event.sender)?.close());
+ipcMain.on('open-external-link', (event, url) => shell.openExternal(url));
 
 /* Refloow Video Editor
  * Copyright (C) 2025  Veljko Vuckovic (Refloow) <legal@refloow.com>
