@@ -192,6 +192,71 @@ ipcMain.handle('dialog:openFile', async () => {
     return canceled ? [] : filePaths;
 });
 
+
+ipcMain.handle('extract-waveform', async (_event, filePath) => {
+    return new Promise((resolve) => {
+        const TOTAL_BUCKETS = 1200;
+        // Stream raw 16-bit mono PCM at 4000Hz from FFmpeg without buffering the whole file in RAM
+        const args = [
+            '-i', filePath,
+            '-vn',
+            '-ac', '1',
+            '-ar', '4000',
+            '-f', 's16le',
+            '-acodec', 'pcm_s16le',
+            'pipe:1'
+        ];
+
+        const ff = spawn(ffmpegPath, args);
+        const chunkMaxima = [];
+        let sampleCarry = null;
+
+        ff.stdout.on('data', (buf) => {
+            let offset = 0;
+            if (sampleCarry !== null && buf.length > 0) {
+                const sample = Buffer.from([sampleCarry, buf[0]]).readInt16LE(0);
+                chunkMaxima.push(Math.abs(sample) / 32768);
+                sampleCarry = null;
+                offset = 1;
+            }
+            // Subsample every 64 bytes (32 samples) so memory stays tiny even on 2-hour videos
+            const step = 64;
+            for (let i = offset; i <= buf.length - 2; i += step) {
+                const sample = buf.readInt16LE(i);
+                chunkMaxima.push(Math.abs(sample) / 32768);
+            }
+            if ((buf.length - offset) % 2 === 1) {
+                sampleCarry = buf[buf.length - 1];
+            }
+        });
+
+        ff.on('close', () => {
+            if (chunkMaxima.length === 0) return resolve(null);
+            const peaks = new Array(TOTAL_BUCKETS).fill(0);
+            const ratio = chunkMaxima.length / TOTAL_BUCKETS;
+            let globalMax = 0.01;
+
+            for (let i = 0; i < TOTAL_BUCKETS; i++) {
+                const start = Math.floor(i * ratio);
+                const end = Math.max(start + 1, Math.floor((i + 1) * ratio));
+                let max = 0;
+                for (let j = start; j < end && j < chunkMaxima.length; j++) {
+                    if (chunkMaxima[j] > max) max = chunkMaxima[j];
+                }
+                peaks[i] = max;
+                if (max > globalMax) globalMax = max;
+            }
+
+            for (let i = 0; i < TOTAL_BUCKETS; i++) {
+                peaks[i] = Math.min(1, peaks[i] / globalMax);
+            }
+            resolve(peaks);
+        });
+
+        ff.on('error', () => resolve(null));
+    });
+});
+
 ipcMain.handle('render-video', async (event, edl) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
         title: 'Save Video',
