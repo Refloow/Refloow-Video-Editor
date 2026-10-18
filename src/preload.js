@@ -59,6 +59,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
     openFile: () => ipcRenderer.invoke('dialog:openFile'),
+    extractWaveform: (filePath) => ipcRenderer.invoke('extract-waveform', filePath),
     renderVideo: (editDecisionList) => ipcRenderer.invoke('render-video', editDecisionList),
     onRenderProgress: (callback) => {
         const handler = (_event, value) => callback(value);
